@@ -1,0 +1,65 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Block {
+  blockTxnsCount: Float!
+  block_hash: String!
+  block_number: String!
+  block_reward: String!
+  block_status: String!
+  data: String!
+  id: String!
+  logs_bloom: String!
+  merkle_root: String!
+  previous_hash: String!
+  reciept_root: String!
+  state_root: String!
+  timestamp: String
+  to: String!
+  transaction_root: String!
+  transactions: [Transaction]
+  value: String!
+  version: String!
+}
+
+type BlocksWithCount {
+  blocks: [Block!]!
+  count: Int!
+}
+
+type Query {
+  blockByNumber(blockNumber: Int!): Block
+  blocks(lastId: String, limit: Int! = 10): BlocksWithCount!
+  transaction(hash: String!): Transaction
+  transactions(lastId: String, limit: Int! = 10): TransactionsWithCount!
+  transactionsByAddress(address: String!, lastId: String, limit: Int! = 10): TransactionsWithCount!
+}
+
+type Transaction {
+  State: Boolean
+  Status: Boolean
+  block: String
+  blockInfo: Block
+  from: String!
+  functionType: String!
+  gas: String!
+  gas_price: String!
+  hash: String!
+  id: String!
+  input: String!
+  node_id: String!
+  nonce: String!
+  to: String!
+  transaction_Status: String!
+  transaction_status: Boolean
+  transaction_time: String
+  type: String!
+  unix_timestamp: String
+  value: String!
+}
+
+type TransactionsWithCount {
+  count: Int!
+  transactions: [Transaction!]!
+}
