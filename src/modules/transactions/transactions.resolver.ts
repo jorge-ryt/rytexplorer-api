@@ -8,7 +8,7 @@ export class TransactionsResolver {
   constructor(private readonly transactionsService: TransactionsService) {}
 
   @Query(() => TransactionsWithCount)
-  transactions(
+  getTransactions(
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
     @Args('lastId', { type: () => String, nullable: true }) lastId?: string,
   ) {

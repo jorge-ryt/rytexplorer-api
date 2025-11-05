@@ -8,7 +8,7 @@ export class BlocksResolver {
   constructor(private readonly blocksService: BlocksService) {}
 
   @Query(() => BlocksWithCount)
-  blocks(
+  getBlocks(
     @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
     @Args('lastId', { type: () => String, nullable: true }) lastId?: string,
   ) {
@@ -16,7 +16,7 @@ export class BlocksResolver {
   }
 
   @Query(() => Block, { nullable: true })
-  blockByNumber(@Args('blockNumber', { type: () => Int }) blockNumber: string) {
+  block(@Args('blockNumber', { type: () => Int }) blockNumber: string) {
     return this.blocksService.getBlockByNumber(blockNumber);
   }
 }

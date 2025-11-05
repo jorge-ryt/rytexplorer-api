@@ -1,6 +1,7 @@
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
-import { GqlModuleOptions } from '@nestjs/graphql';
+
+import { GraphQLLoggingPlugin } from '../common/plugins/graphql-logging.plugin';
 
 export const graphqlConfig: ApolloDriverConfig = {
   driver: ApolloDriver,
@@ -9,4 +10,5 @@ export const graphqlConfig: ApolloDriverConfig = {
   playground: process.env.NODE_ENV !== 'production',
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [new GraphQLLoggingPlugin()],
 };

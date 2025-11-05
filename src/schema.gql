@@ -3,7 +3,7 @@
 # ------------------------------------------------------
 
 type Block {
-  blockTxnsCount: Float!
+  blockTxnsCount: Float
   block_hash: String!
   block_number: String!
   block_reward: String!
@@ -29,10 +29,10 @@ type BlocksWithCount {
 }
 
 type Query {
-  blockByNumber(blockNumber: Int!): Block
-  blocks(lastId: String, limit: Int! = 10): BlocksWithCount!
+  block(blockNumber: Int!): Block
+  getBlocks(lastId: String, limit: Int! = 10): BlocksWithCount!
+  getTransactions(lastId: String, limit: Int! = 10): TransactionsWithCount!
   transaction(hash: String!): Transaction
-  transactions(lastId: String, limit: Int! = 10): TransactionsWithCount!
   transactionsByAddress(address: String!, lastId: String, limit: Int! = 10): TransactionsWithCount!
 }
 

@@ -39,7 +39,7 @@ export class Block {
   @Field(() => [Transaction], { nullable: 'itemsAndList' })
   transactions: Transaction[];
 
-  @Field(() => Number)
+  @Field(() => Number, { nullable: true })
   blockTxnsCount: number;
 
   @Field(() => String)
