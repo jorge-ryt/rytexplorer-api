@@ -47,6 +47,7 @@ export class BlocksService {
       ...block,
       id: block.id.toString(),
       block_number: block.block_number.toString(),
+      blockTxnsCount: block.transactions.length,
       transactions: block.transactions.map((tx) => ({
         ...tx,
         id: tx.id.toString(),
