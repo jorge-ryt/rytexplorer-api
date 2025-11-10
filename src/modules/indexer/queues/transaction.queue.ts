@@ -111,7 +111,6 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
 
           for (const item of txArray) {
             const tx = item.TransferObj ?? item; // some payloads wrap actual transfer data inside TransferObj
-
             const txHash = tx.hash ?? tx.Hash ?? item.hash ?? item.Hash ?? null;
             if (!txHash) {
               this.logger.warn('Transaction missing hash, skipping', tx);
@@ -128,9 +127,17 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
               this.logger.debug(`Duplicate transaction (skipping): ${txHash}`);
               continue;
             }
-            const blockNumber = String(
-              item.block ?? item.block_number ?? item.blockNumber ?? '',
-            );
+            // Try multiple common locations for block number — prefer the normalized `tx` object
+            const rawBlockNumber =
+              tx.block ??
+              tx.block_number ??
+              tx.blockNumber ??
+              item.block ??
+              item.block_number ??
+              item.blockNumber ??
+              '';
+            const blockNumber =
+              rawBlockNumber !== '' ? String(rawBlockNumber) : '';
 
             // Map your tx structure to Prisma create data
             const createData: any = {
@@ -141,7 +148,6 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
               ...(blockNumber
                 ? { block: { connect: { block_number: blockNumber } } }
                 : {}),
-
               from: tx.from ?? item.from ?? null,
               to: tx.to ?? item.to ?? null,
               value: String(tx.value ?? item.value ?? '0'),

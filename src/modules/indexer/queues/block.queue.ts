@@ -8,6 +8,7 @@ import type { Block } from '@prisma/client';
 import { RedisService } from '../../../redis/redis.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
+import { TransactionQueue } from './transaction.queue';
 
 @Injectable()
 export class BlockQueue implements OnModuleInit, OnModuleDestroy {
@@ -20,6 +21,7 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
     private readonly redisService: RedisService,
     private readonly prisma: PrismaService,
     private readonly wsBroadcast: WsBroadcastGateway,
+    private readonly transactionQueue: TransactionQueue,
   ) {}
 
   /** Public API — enqueue a new block into Redis */
@@ -182,6 +184,45 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
           await this.prisma.block.create({
             data: createData,
           });
+
+          // Process block's transactions if present
+          if (txCount > 0) {
+            this.logger.debug(
+              `Processing ${block.transactions.length} transactions for block ${blockNumber}`,
+            );
+
+            for (const txHash of block.transactions) {
+              // Check if transaction exists
+              const existingTx = await this.prisma.transaction.findUnique({
+                where: { hash: txHash },
+              });
+
+              if (existingTx) {
+                // Update existing transaction with block info
+                await this.prisma.transaction.update({
+                  where: { hash: txHash },
+                  data: {
+                    block_number: String(blockNumber),
+                    transaction_Status: 'Confirmed', // Update status since it's now in a block
+                  },
+                });
+                this.logger.debug(
+                  `Updated transaction ${txHash} with block ${blockNumber}`,
+                );
+              } else {
+                // If transaction doesn't exist, queue it for processing
+                // The transaction queue will handle fetching full details
+                await this.transactionQueue.enqueue({
+                  hash: txHash,
+                  block_number: String(blockNumber),
+                  transaction_Status: 'Confirmed',
+                });
+                this.logger.debug(
+                  `Queued transaction ${txHash} for processing with block ${blockNumber}`,
+                );
+              }
+            }
+          }
 
           // broadcast to websocket clients
           try {
