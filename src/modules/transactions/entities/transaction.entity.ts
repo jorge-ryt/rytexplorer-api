@@ -56,7 +56,4 @@ export class Transaction {
 
   @Field(() => String)
   input: string;
-
-  @Field(() => Block, { nullable: true })
-  blockInfo?: Block;
 }

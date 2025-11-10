@@ -7,6 +7,7 @@ import {
 import { RedisService } from '../../../redis/redis.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
+import { extractTxHash } from '../../../common/utils/tx-utils';
 
 @Injectable()
 export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
@@ -34,7 +35,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
       const serialized = JSON.stringify(txData);
       await redis.rpush(this.queueKey, serialized);
 
-      const txHash = txData.hash ?? txData.transaction_hash ?? 'unknown';
+      const txHash = extractTxHash(txData) ?? 'unknown';
       this.logger.debug(`💸 Enqueued transaction ${txHash}`);
     } catch (err) {
       this.logger.error('Failed to enqueue transaction', err);

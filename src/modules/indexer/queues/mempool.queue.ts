@@ -4,9 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+import serialize from 'serialize-javascript';
+
 import { RedisService } from '../../../redis/redis.service';
 import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
-import serialize from 'serialize-javascript';
+import { normalizeTxData, extractTxHash } from '../../../common/utils/tx-utils';
 
 @Injectable()
 export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
@@ -22,10 +24,18 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
 
   // Producer API: enqueue into redis list
   async enqueue(item: any) {
+    const hash = extractTxHash(item);
+    if (!hash) {
+      this.logger.warn(
+        `[MempoolQueue] Skipping enqueue — transaction has no hash: ${JSON.stringify(item)}`,
+      );
+      return;
+    }
+
     const serialized = serialize({ obj: item });
     const redis = this.redisService.getClient();
     await redis.rpush(this.queueName, serialized);
-    this.logger.debug(`Enqueued mempool tx ${item.hash} -> ${this.queueName}`);
+    this.logger.debug(`Enqueued mempool tx ${hash} -> ${this.queueName}`);
   }
 
   // Consumer API: process items from redis list
@@ -77,7 +87,8 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
         }
 
         // Check for hash
-        const hash = deserialized?.obj?.hash ?? deserialized.hash;
+        const tx = deserialized.obj ?? deserialized;
+        const hash = extractTxHash(tx);
         if (!hash) {
           this.logger.warn('Mempool queue item without hash, removing');
           await redis.lpop(queue);
@@ -93,11 +104,10 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
         }
 
         this.logger.debug(`Processing new mempool tx: ${hash}`);
+        // ✅ Normalize transaction data here
+        const normalizedTx = normalizeTxData(tx);
         // broadcast to frontend clients
-        this.gateway.broadcast(
-          'unconfirmed-transactions',
-          deserialized.obj?.data ?? deserialized.data ?? deserialized,
-        );
+        this.gateway.broadcast('unconfirmed-transactions', normalizedTx);
 
         // mark as seen
         await redis.sadd('seen_set_mempool', hash);
