@@ -4,7 +4,7 @@ import { GqlModule } from './graphql/gql.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { BlocksModule } from './modules/blocks/blocks.module';
 import { TransactionsModule } from './modules/transactions/transactions.module';
-import { AccountsModule } from './modules/accounts/accounts.module';
+// import { AccountsModule } from './modules/accounts/accounts.module';
 import { RedisModule } from './redis/redis.module';
 import { IndexerModule } from './modules/indexer/indexer.module';
 
@@ -16,7 +16,7 @@ import { IndexerModule } from './modules/indexer/indexer.module';
     IndexerModule,
     BlocksModule,
     TransactionsModule,
-    AccountsModule,
+    // AccountsModule,
     RedisModule,
   ],
 })

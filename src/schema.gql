@@ -2,19 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Account {
-  address: String!
-  balance: String
-  balance_dollars: Float
-  name_tag: String
-  txns_count: Int!
-}
-
-type AccountsWithCount {
-  accounts: [Account!]!
-  count: Int!
-}
-
 type Block {
   blockTxnsCount: Float
   block_hash: String!
@@ -42,16 +29,11 @@ type BlocksWithCount {
 }
 
 type Query {
-  blockByNumber(blockNumber: Int!): Block
+  block(blockNumber: Int!): Block
   getBlocks(lastId: String, limit: Int! = 10): BlocksWithCount!
-  getAccounts(lastAddress: String, limit: Int! = 25): AccountsWithCount!
   getTransactions(lastId: String, limit: Int! = 10): TransactionsWithCount!
   transaction(hash: String!): Transaction
-  transactionsByAddress(
-    address: String!
-    lastId: String
-    limit: Int! = 10
-  ): TransactionsWithCount!
+  transactionsByAddress(address: String!, lastId: String, limit: Int! = 10): TransactionsWithCount!
   transactionsByBlock(block_number: String!): [Transaction!]!
 }
 
@@ -71,7 +53,6 @@ type Transaction {
   nonce: String!
   to: String!
   transaction_Status: String!
-  transaction_status: Boolean
   transaction_time: String
   type: String!
   unix_timestamp: String

@@ -135,7 +135,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
             const createData: any = {
               id: item.id ?? undefined,
               transaction_Status:
-                item.transaction_Status ?? item.transactionStatus ?? null,
+                item.transaction_Status ?? item.transactionStatus ?? 'Pending',
               hash: txHash,
               ...(blockNumber
                 ? { block: { connect: { block_number: blockNumber } } }
@@ -145,8 +145,6 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
               to: tx.to ?? item.to ?? null,
               value: String(tx.value ?? item.value ?? '0'),
               transaction_time: item.transaction_time ?? null,
-              transaction_status:
-                item.transaction_status ?? item.transaction_status ?? null,
               functionType: item.functionType ?? item.type ?? null,
               unix_timestamp: item.unix_timestamp ?? null,
               Status: item.Status ?? null,

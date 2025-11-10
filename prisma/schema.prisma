@@ -25,6 +25,7 @@ model Block {
   data             String        @db.VarChar(255)
   to               String        @db.VarChar(255)
   blockTxnsCount   Int           @default(0)
+  Transaction      Transaction[]
 
   @@index([block_number], map: "idx_blocks_block_number")
   @@index([block_hash], map: "idx_blocks_block_hash")
@@ -35,12 +36,11 @@ model Block {
 model Transaction {
   hash               String   @unique @db.VarChar(255)
   id                 BigInt   @id @default(autoincrement())
-  transaction_Status String?  @db.VarChar(255)
+  transaction_Status String   @db.VarChar(255)
   from               String   @db.VarChar(255)
   to                 String   @db.VarChar(255)
   value              String   @db.VarChar(255)
   transaction_time   String?  @db.VarChar(255)
-  transaction_status Boolean?
   functionType       String   @db.VarChar(255)
   unix_timestamp     BigInt?
   Status             Boolean?

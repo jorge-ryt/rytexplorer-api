@@ -27,9 +27,6 @@ export class Transaction {
   @Field(() => String, { nullable: true })
   transaction_time?: string | null;
 
-  @Field(() => Boolean, { nullable: true })
-  transaction_status?: boolean | null;
-
   @Field(() => String)
   functionType: string;
 
