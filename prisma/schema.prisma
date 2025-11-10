@@ -8,43 +8,41 @@ datasource db {
 }
 
 model Block {
-  id               BigInt   @id @db.BigInt
-  block_number     String   @unique @db.VarChar(255)
-  block_hash       String   @unique @db.VarChar(255)
-  version          String   @db.VarChar(255)
-  merkle_root      String   @db.VarChar(255)
-  block_status     String   @default("confirmed") @db.VarChar(255)
-  previous_hash    String   @db.VarChar(255)
-  state_root       String   @db.VarChar(255)
-  transaction_root String   @db.VarChar(255)
-  reciept_root     String   @db.VarChar(255)
-  timestamp        String?  @db.VarChar(255)
-  logs_bloom       String   @db.VarChar(255)
-  block_reward     String   @db.VarChar(255)
-  value            String   @db.VarChar(255)
-  data             String   @db.VarChar(255)
-  to               String   @db.VarChar(255)
-
-  /// Transactions relationship
-  transactions     Transaction[]
+  block_hash       String        @unique @db.VarChar(255)
+  id               BigInt        @id @default(autoincrement())
+  version          String        @db.VarChar(255)
+  merkle_root      String        @db.VarChar(255)
+  block_number     String        @unique @db.VarChar(255)
+  block_status     String?       @default("confirmed") @db.VarChar(255)
+  previous_hash    String        @db.VarChar(255)
+  state_root       String        @db.VarChar(255)
+  transaction_root String        @db.VarChar(255)
+  reciept_root     String        @db.VarChar(255)
+  timestamp        String?       @db.VarChar(255)
+  logs_bloom       String        @db.VarChar(255)
+  block_reward     String        @db.VarChar(255)
+  value            String        @db.VarChar(255)
+  data             String        @db.VarChar(255)
+  to               String        @db.VarChar(255)
+  blockTxnsCount   Int           @default(0)
 
   @@index([block_number], map: "idx_blocks_block_number")
   @@index([block_hash], map: "idx_blocks_block_hash")
+  @@index([id(sort: Desc)], map: "idx_blocks_id_desc")
   @@map("blocks")
 }
 
 model Transaction {
-  id                 BigInt   @id @default(autoincrement())
   hash               String   @unique @db.VarChar(255)
-  transaction_Status String   @db.VarChar(255)
-  block              String?  @db.VarChar(255)
+  id                 BigInt   @id @default(autoincrement())
+  transaction_Status String?  @db.VarChar(255)
   from               String   @db.VarChar(255)
   to                 String   @db.VarChar(255)
   value              String   @db.VarChar(255)
   transaction_time   String?  @db.VarChar(255)
   transaction_status Boolean?
   functionType       String   @db.VarChar(255)
-  unix_timestamp     String?  @db.VarChar(255)
+  unix_timestamp     BigInt?
   Status             Boolean?
   State              Boolean?
   nonce              String   @db.VarChar(255)
@@ -54,42 +52,45 @@ model Transaction {
   gas_price          String   @db.VarChar(255)
   input              String
 
-  /// Relation to Block (via block_number)
-  blockInfo Block? @relation(fields: [block], references: [block_number])
+  block        Block?  @relation(fields: [block_number], references: [block_number])
+  block_number String?
 
-  @@index([hash], map: "idx_transactions_hash")
   @@index([from], map: "idx_transactions_from")
   @@index([from, id(sort: Desc)], map: "idx_transactions_from_id_desc")
   @@index([to], map: "idx_transactions_to")
   @@index([to, id(sort: Desc)], map: "idx_transactions_to_id_desc")
+  @@index([id(sort: Desc)], map: "idx_transactions_id_desc")
   @@map("transactions")
 }
 
 model Alert {
-  id           String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id           String @id @default(uuid()) @db.Uuid
   block_number String @db.VarChar(255)
   block_status String @db.VarChar(255)
+
   @@map("alerts")
 }
 
 model TransactionHistory {
-  id           String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id           String @id @default(uuid()) @db.Uuid
   date         String @db.VarChar(255)
   transactions BigInt
+
   @@map("transactionHistory")
 }
 
 model ReplayBlocks {
-  id           String   @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id           String   @id @default(uuid()) @db.Uuid
   replayBlocks Boolean? @default(false)
   lastBlock    String?  @db.VarChar(255)
   latestBlock  String?  @db.VarChar(255)
   Status       String?  @db.VarChar(255)
+
   @@map("replayBlocks")
 }
 
 model globalStats {
-  id                 String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id                 String @id @default(uuid()) @db.Uuid
   ryt_price          BigInt
   market_cap         BigInt
   total_transactions BigInt
@@ -113,7 +114,7 @@ model knex_migrations_lock {
 }
 
 model nodesMap {
-  id       String  @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id       String  @id @default(uuid()) @db.Uuid
   type     String  @db.VarChar(255)
   location Json
   label    String? @db.VarChar(255)
@@ -121,7 +122,7 @@ model nodesMap {
 }
 
 model tokenInfo {
-  id        String @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  id        String @id @default(uuid()) @db.Uuid
   price     BigInt
   gas_price BigInt
 }

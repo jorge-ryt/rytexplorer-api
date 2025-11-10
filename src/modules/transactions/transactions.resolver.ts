@@ -32,4 +32,18 @@ export class TransactionsResolver {
       lastId,
     );
   }
+
+  @Query(() => [Transaction], { name: 'transactionsByBlock' })
+  async getTransactionsByBlock(
+    @Args('block_number') blockNumber: string,
+  ): Promise<Transaction[]> {
+    const txs =
+      await this.transactionsService.getTransactionsByBlock(blockNumber);
+    return txs.map((t) => ({
+      ...t,
+      transaction_Status: t.transaction_Status ?? '',
+      unix_timestamp:
+        t.unix_timestamp != null ? t.unix_timestamp.toString() : null,
+    }));
+  }
 }

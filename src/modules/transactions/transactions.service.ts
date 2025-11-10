@@ -8,7 +8,7 @@ export class TransactionsService {
   async getTransactions(limit: number, lastId?: string) {
     const transactions = await this.prisma.transaction.findMany({
       take: limit,
-      ...(lastId && { cursor: { id: BigInt(lastId) }, skip: 1 }),
+      ...(lastId && { cursor: { hash: lastId }, skip: 1 }),
       orderBy: { id: 'desc' },
     });
 
@@ -25,7 +25,6 @@ export class TransactionsService {
   async getTransactionByHash(hash: string) {
     const tx = await this.prisma.transaction.findUnique({
       where: { hash },
-      include: { blockInfo: true },
     });
 
     if (!tx) return null;
@@ -52,7 +51,7 @@ export class TransactionsService {
       skip: lastId ? 1 : 0,
       ...(lastId && { cursor: { id: BigInt(lastId) } }),
       orderBy: { id: 'desc' },
-      include: { blockInfo: true },
+      include: { block: true },
     });
 
     // Convert BigInt IDs to string
@@ -62,5 +61,24 @@ export class TransactionsService {
     }));
 
     return { count, transactions: transactionsWithStringId };
+  }
+
+  async getTransactionsByBlock(blockNumber: string) {
+    const transactions = await this.prisma.transaction.findMany({
+      where: {
+        block_number: blockNumber,
+      },
+      orderBy: { id: 'desc' },
+    });
+
+    // convert BigInts to strings for GraphQL safety
+    return transactions.map((tx) => ({
+      ...tx,
+      id: tx.id?.toString?.() ?? tx.id,
+      value: tx.value?.toString?.() ?? tx.value,
+      gas: tx.gas?.toString?.() ?? tx.gas,
+      gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
+      nonce: tx.nonce?.toString?.() ?? tx.nonce,
+    }));
   }
 }

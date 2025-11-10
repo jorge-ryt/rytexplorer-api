@@ -28,20 +28,24 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
     this.logger.debug(`Enqueued mempool tx ${item.hash} -> ${this.queueName}`);
   }
 
+  // Consumer API: process items from redis list
   async onModuleInit() {
     this.logger.log(`Starting mempool queue listener on ${this.queueName}`);
     this.processQueue(this.queueName);
   }
 
+  // Graceful shutdown
   async onModuleDestroy() {
     this.running = false;
     this.logger.log('Stopping mempool queue listener');
   }
 
+  // Utility: sleep
   private async sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  // Core: process queue items
   private async processQueue(queue: string) {
     const redis = this.redisService.getClient();
 
@@ -50,19 +54,15 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
       if (length > 0) {
         const value = await redis.lindex(queue, 0);
         if (!value) {
-          // possible race, pop and continue
           await redis.lpop(queue);
           continue;
         }
 
+        // Deserialize item
         let deserialized: any;
         try {
           deserialized = JSON.parse(value);
         } catch {
-          // older code used serialize(), which may produce JS that isn't pure JSON.
-          // If your items were saved with serialize-javascript, you'll need to
-          // `eval` or use a compatible deserializer. For safety we attempt JSON parse,
-          // falling back to eval only if necessary (be cautious with eval).
           try {
             // eslint-disable-next-line no-eval
             deserialized = eval('(' + value + ')');
@@ -76,6 +76,7 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           }
         }
 
+        // Check for hash
         const hash = deserialized?.obj?.hash ?? deserialized.hash;
         if (!hash) {
           this.logger.warn('Mempool queue item without hash, removing');
@@ -83,6 +84,7 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           continue;
         }
 
+        // Check for duplicates
         const seen = await redis.sismember('seen_set_mempool', hash);
         if (seen) {
           this.logger.debug(`Duplicate mempool tx — removing ${hash}`);
@@ -97,6 +99,7 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           deserialized.obj?.data ?? deserialized.data ?? deserialized,
         );
 
+        // mark as seen
         await redis.sadd('seen_set_mempool', hash);
         await redis.lpop(queue);
       } else {

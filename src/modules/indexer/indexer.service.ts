@@ -5,7 +5,6 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import WebSocket from 'ws';
-import serialize from 'serialize-javascript';
 import { RedisService } from '../../redis/redis.service';
 import { WsBroadcastGateway } from './indexer.ws-broadcast.gateway';
 import { MempoolQueue } from './queues/mempool.queue';

@@ -41,6 +41,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // Module lifecycle — start processing queue
   onModuleInit() {
     this.logger.log(`Starting TransactionQueue listener on ${this.queueKey}`);
     this.processQueue().catch((err) => {
@@ -48,15 +49,18 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  // Module lifecycle — stop processing queue
   onModuleDestroy() {
     this.running = false;
     this.logger.log('Stopping TransactionQueue');
   }
 
+  // Utility: sleep
   private async sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
   }
 
+  // Utility: parse payload from Redis
   private parsePayload(raw: string) {
     try {
       const parsed = JSON.parse(raw);
@@ -75,6 +79,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // Core: process queue items
   private async processQueue() {
     const redis = this.redisService.getClient();
 
@@ -96,7 +101,6 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
           }
 
           // payload may be an array of txs, or an object representing one tx (depending on producer)
-          // The old code sometimes pushed arrays (transactions_array) for finalized transactions.
           const txItems = Array.isArray(payload)
             ? payload
             : (payload.data ?? payload);
@@ -123,17 +127,20 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
               this.logger.debug(`Duplicate transaction (skipping): ${txHash}`);
               continue;
             }
+            const blockNumber = String(
+              item.block ?? item.block_number ?? item.blockNumber ?? '',
+            );
 
             // Map your tx structure to Prisma create data
             const createData: any = {
-              // keep original fields names you expect; adjust to match Prisma schema
-              id: undefined,
+              id: item.id ?? undefined,
               transaction_Status:
                 item.transaction_Status ?? item.transactionStatus ?? null,
               hash: txHash,
-              block: String(
-                item.block ?? item.block_number ?? item.blockNumber ?? null,
-              ),
+              ...(blockNumber
+                ? { block: { connect: { block_number: blockNumber } } }
+                : {}),
+
               from: tx.from ?? item.from ?? null,
               to: tx.to ?? item.to ?? null,
               value: String(tx.value ?? item.value ?? '0'),

@@ -151,29 +151,34 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
             continue;
           }
 
+          // count transactions
+          const txCount =
+            Array.isArray(block.transactions) && block.transactions.length
+              ? block.transactions.length
+              : 0;
+
           // Prepare data mapping — keep fields as strings as in your examples
           const createData: any = {
             id: block.id ?? String(block.block_number ?? blockNumber),
-            version: block.version ?? null,
+            version: String(block.version ?? 1),
             merkle_root: block.merkle_root ?? null,
             block_number: String(block.block_number ?? blockNumber),
-            block_status: block.block_status ?? null,
+            block_status: block.block_status ?? 'confirmed',
             previous_hash: block.previous_hash ?? null,
             state_root: block.state_root ?? null,
             transaction_root: block.transaction_root ?? null,
             reciept_root: block.reciept_root ?? null,
-            timestamp: block.timestamp ?? null,
+            timestamp: block.timestamp ? String(block.timestamp) : null,
             logs_bloom: block.logs_bloom ?? null,
-            transactions: block.transactions ?? null, // if your Prisma field supports JSON
             block_reward: block.block_reward ?? null,
             value: block.value ?? null,
             data: block.data ?? null,
             to: block.to ?? null,
             block_hash: block.block_hash ?? blockHash ?? null,
+            blockTxnsCount: txCount,
           };
 
-          // If your Prisma Block model stores transactions as Json, you can pass it through.
-          // adjust fields based on your Prisma schema shape or types.
+          // Save to database
           await this.prisma.block.create({
             data: createData,
           });

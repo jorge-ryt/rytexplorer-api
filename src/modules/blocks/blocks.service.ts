@@ -13,9 +13,6 @@ export class BlocksService {
       skip: lastId ? 1 : 0,
       ...(lastId && { cursor: { id: BigInt(lastId) } }),
       orderBy: { id: 'desc' },
-      include: {
-        transactions: true,
-      },
     });
 
     // Convert BigInt fields to strings for GraphQL
@@ -24,11 +21,7 @@ export class BlocksService {
       blocks: blocks.map((block) => ({
         ...block,
         id: block.id.toString(),
-        blockTxnsCount: block.transactions.length,
-        transactions: block.transactions.map((tx) => ({
-          ...tx,
-          id: tx.id.toString(),
-        })),
+        blockTxnsCount: block.blockTxnsCount ?? 0,
       })),
     };
   }
@@ -37,7 +30,6 @@ export class BlocksService {
     // ✅ Ensure it's a string before passing to Prisma
     const block = await this.prisma.block.findUnique({
       where: { block_number: blockNumber.toString() },
-      include: { transactions: true },
     });
 
     if (!block) return null;
@@ -47,12 +39,7 @@ export class BlocksService {
       ...block,
       id: block.id.toString(),
       block_number: block.block_number.toString(),
-      blockTxnsCount: block.transactions.length,
-      transactions: block.transactions.map((tx) => ({
-        ...tx,
-        id: tx.id.toString(),
-        block: tx.block ? tx.block.toString() : null,
-      })),
+      blockTxnsCount: block.blockTxnsCount ?? 0,
     };
   }
 }
