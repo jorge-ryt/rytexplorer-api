@@ -41,7 +41,6 @@ type Transaction {
   State: Boolean
   Status: Boolean
   block: String
-  blockInfo: Block
   from: String!
   functionType: String!
   gas: String!

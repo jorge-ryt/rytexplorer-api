@@ -15,6 +15,13 @@ export class TransactionsService {
     const transactionsWithStringId = transactions.map((tx) => ({
       ...tx,
       id: tx.id.toString(),
+      // convert BigInt/number fields to string for GraphQL String fields
+      unix_timestamp:
+        tx.unix_timestamp != null ? tx.unix_timestamp.toString() : null,
+      value: tx.value?.toString?.() ?? tx.value,
+      gas: tx.gas?.toString?.() ?? tx.gas,
+      gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
+      nonce: tx.nonce?.toString?.() ?? tx.nonce,
     }));
 
     const count = await this.prisma.transaction.count();
@@ -33,6 +40,12 @@ export class TransactionsService {
     return {
       ...tx,
       id: tx.id.toString(),
+      unix_timestamp:
+        tx.unix_timestamp != null ? tx.unix_timestamp.toString() : null,
+      value: tx.value?.toString?.() ?? tx.value,
+      gas: tx.gas?.toString?.() ?? tx.gas,
+      gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
+      nonce: tx.nonce?.toString?.() ?? tx.nonce,
     };
   }
 
@@ -54,10 +67,16 @@ export class TransactionsService {
       include: { block: true },
     });
 
-    // Convert BigInt IDs to string
+    // Convert BigInt IDs and numeric fields to string for GraphQL
     const transactionsWithStringId = transactions.map((tx) => ({
       ...tx,
       id: tx.id.toString(),
+      unix_timestamp:
+        tx.unix_timestamp != null ? tx.unix_timestamp.toString() : null,
+      value: tx.value?.toString?.() ?? tx.value,
+      gas: tx.gas?.toString?.() ?? tx.gas,
+      gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
+      nonce: tx.nonce?.toString?.() ?? tx.nonce,
     }));
 
     return { count, transactions: transactionsWithStringId };
