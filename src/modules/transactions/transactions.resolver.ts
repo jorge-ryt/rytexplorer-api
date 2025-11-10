@@ -36,9 +36,14 @@ export class TransactionsResolver {
   @Query(() => [Transaction], { name: 'transactionsByBlock' })
   async getTransactionsByBlock(
     @Args('block_number') blockNumber: string,
+    @Args('limit', { type: () => Int, defaultValue: 10 }) limit: number,
+    @Args('lastId', { type: () => String, nullable: true }) lastId?: string,
   ): Promise<Transaction[]> {
-    const txs =
-      await this.transactionsService.getTransactionsByBlock(blockNumber);
+    const txs = await this.transactionsService.getTransactionsByBlock(
+      blockNumber,
+      limit,
+      lastId,
+    );
     return txs.map((t) => ({
       ...t,
       transaction_Status: t.transaction_Status ?? '',

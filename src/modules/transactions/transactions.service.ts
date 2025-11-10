@@ -88,11 +88,18 @@ export class TransactionsService {
     return { count, transactions: transactionsWithStringId };
   }
 
-  async getTransactionsByBlock(blockNumber: string) {
+  async getTransactionsByBlock(
+    blockNumber: string,
+    limit = 10,
+    lastId?: string,
+  ) {
     const transactions = await this.prisma.transaction.findMany({
       where: {
         block_number: blockNumber,
       },
+      take: limit,
+      skip: lastId ? 1 : 0,
+      ...(lastId && { cursor: { id: BigInt(lastId) } }),
       orderBy: { id: 'desc' },
     });
 
