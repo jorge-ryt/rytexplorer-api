@@ -4,9 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+import serialize from 'serialize-javascript';
+
 import { RedisService } from '../../../redis/redis.service';
 import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
-import serialize from 'serialize-javascript';
+import { normalizeTxData, extractTxHash } from '../../../common/utils/tx-utils';
 
 @Injectable()
 export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
@@ -22,26 +24,38 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
 
   // Producer API: enqueue into redis list
   async enqueue(item: any) {
+    const hash = extractTxHash(item);
+    if (!hash) {
+      this.logger.warn(
+        `[MempoolQueue] Skipping enqueue — transaction has no hash: ${JSON.stringify(item)}`,
+      );
+      return;
+    }
+
     const serialized = serialize({ obj: item });
     const redis = this.redisService.getClient();
     await redis.rpush(this.queueName, serialized);
-    this.logger.debug(`Enqueued mempool tx ${item.hash} -> ${this.queueName}`);
+    this.logger.debug(`Enqueued mempool tx ${hash} -> ${this.queueName}`);
   }
 
+  // Consumer API: process items from redis list
   async onModuleInit() {
     this.logger.log(`Starting mempool queue listener on ${this.queueName}`);
     this.processQueue(this.queueName);
   }
 
+  // Graceful shutdown
   async onModuleDestroy() {
     this.running = false;
     this.logger.log('Stopping mempool queue listener');
   }
 
+  // Utility: sleep
   private async sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
+  // Core: process queue items
   private async processQueue(queue: string) {
     const redis = this.redisService.getClient();
 
@@ -50,19 +64,15 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
       if (length > 0) {
         const value = await redis.lindex(queue, 0);
         if (!value) {
-          // possible race, pop and continue
           await redis.lpop(queue);
           continue;
         }
 
+        // Deserialize item
         let deserialized: any;
         try {
           deserialized = JSON.parse(value);
         } catch {
-          // older code used serialize(), which may produce JS that isn't pure JSON.
-          // If your items were saved with serialize-javascript, you'll need to
-          // `eval` or use a compatible deserializer. For safety we attempt JSON parse,
-          // falling back to eval only if necessary (be cautious with eval).
           try {
             // eslint-disable-next-line no-eval
             deserialized = eval('(' + value + ')');
@@ -76,13 +86,16 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           }
         }
 
-        const hash = deserialized?.obj?.hash ?? deserialized.hash;
+        // Check for hash
+        const tx = deserialized.obj ?? deserialized;
+        const hash = extractTxHash(tx);
         if (!hash) {
           this.logger.warn('Mempool queue item without hash, removing');
           await redis.lpop(queue);
           continue;
         }
 
+        // Check for duplicates
         const seen = await redis.sismember('seen_set_mempool', hash);
         if (seen) {
           this.logger.debug(`Duplicate mempool tx — removing ${hash}`);
@@ -91,12 +104,12 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
         }
 
         this.logger.debug(`Processing new mempool tx: ${hash}`);
+        // ✅ Normalize transaction data here
+        const normalizedTx = normalizeTxData(tx);
         // broadcast to frontend clients
-        this.gateway.broadcast(
-          'unconfirmed-transactions',
-          deserialized.obj?.data ?? deserialized.data ?? deserialized,
-        );
+        this.gateway.broadcast('unconfirmed-transactions', normalizedTx);
 
+        // mark as seen
         await redis.sadd('seen_set_mempool', hash);
         await redis.lpop(queue);
       } else {

@@ -7,6 +7,7 @@ import {
 import { RedisService } from '../../../redis/redis.service';
 import { PrismaService } from '../../../prisma/prisma.service';
 import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
+import { extractTxHash } from '../../../common/utils/tx-utils';
 
 @Injectable()
 export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
@@ -34,13 +35,14 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
       const serialized = JSON.stringify(txData);
       await redis.rpush(this.queueKey, serialized);
 
-      const txHash = txData.hash ?? txData.transaction_hash ?? 'unknown';
+      const txHash = extractTxHash(txData) ?? 'unknown';
       this.logger.debug(`💸 Enqueued transaction ${txHash}`);
     } catch (err) {
       this.logger.error('Failed to enqueue transaction', err);
     }
   }
 
+  // Module lifecycle — start processing queue
   onModuleInit() {
     this.logger.log(`Starting TransactionQueue listener on ${this.queueKey}`);
     this.processQueue().catch((err) => {
@@ -48,15 +50,18 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     });
   }
 
+  // Module lifecycle — stop processing queue
   onModuleDestroy() {
     this.running = false;
     this.logger.log('Stopping TransactionQueue');
   }
 
+  // Utility: sleep
   private async sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
   }
 
+  // Utility: parse payload from Redis
   private parsePayload(raw: string) {
     try {
       const parsed = JSON.parse(raw);
@@ -75,6 +80,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  // Core: process queue items
   private async processQueue() {
     const redis = this.redisService.getClient();
 
@@ -96,7 +102,6 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
           }
 
           // payload may be an array of txs, or an object representing one tx (depending on producer)
-          // The old code sometimes pushed arrays (transactions_array) for finalized transactions.
           const txItems = Array.isArray(payload)
             ? payload
             : (payload.data ?? payload);
@@ -106,7 +111,6 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
 
           for (const item of txArray) {
             const tx = item.TransferObj ?? item; // some payloads wrap actual transfer data inside TransferObj
-
             const txHash = tx.hash ?? tx.Hash ?? item.hash ?? item.Hash ?? null;
             if (!txHash) {
               this.logger.warn('Transaction missing hash, skipping', tx);
@@ -123,23 +127,31 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
               this.logger.debug(`Duplicate transaction (skipping): ${txHash}`);
               continue;
             }
+            // Try multiple common locations for block number — prefer the normalized `tx` object
+            const rawBlockNumber =
+              tx.block ??
+              tx.block_number ??
+              tx.blockNumber ??
+              item.block ??
+              item.block_number ??
+              item.blockNumber ??
+              '';
+            const blockNumber =
+              rawBlockNumber !== '' ? String(rawBlockNumber) : '';
 
             // Map your tx structure to Prisma create data
             const createData: any = {
-              // keep original fields names you expect; adjust to match Prisma schema
-              id: undefined,
+              id: item.id ?? undefined,
               transaction_Status:
-                item.transaction_Status ?? item.transactionStatus ?? null,
+                item.transaction_Status ?? item.transactionStatus ?? 'Pending',
               hash: txHash,
-              block: String(
-                item.block ?? item.block_number ?? item.blockNumber ?? null,
-              ),
+              ...(blockNumber
+                ? { block: { connect: { block_number: blockNumber } } }
+                : {}),
               from: tx.from ?? item.from ?? null,
               to: tx.to ?? item.to ?? null,
               value: String(tx.value ?? item.value ?? '0'),
               transaction_time: item.transaction_time ?? null,
-              transaction_status:
-                item.transaction_status ?? item.transaction_status ?? null,
               functionType: item.functionType ?? item.type ?? null,
               unix_timestamp: item.unix_timestamp ?? null,
               Status: item.Status ?? null,
