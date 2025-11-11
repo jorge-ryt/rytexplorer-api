@@ -5,10 +5,10 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import type { Block } from '@prisma/client';
-import { RedisService } from '../../../redis/redis.service';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
-import { TransactionQueue } from './transaction.queue';
+import { RedisService } from '@Redis/redis.service';
+import { PrismaService } from '@Prisma/prisma.service';
+import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
+import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
 
 @Injectable()
 export class BlockQueue implements OnModuleInit, OnModuleDestroy {
@@ -77,7 +77,6 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
     } catch (e) {
       // fallback to eval for serialize-javascript format (legacy)
       try {
-        // eslint-disable-next-line no-eval
         const evaluated = eval('(' + raw + ')');
         if (evaluated && evaluated.obj) return evaluated.obj;
         return evaluated;

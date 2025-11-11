@@ -5,17 +5,16 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import WebSocket from 'ws';
-import { RedisService } from '../../redis/redis.service';
-import { WsBroadcastGateway } from './indexer.ws-broadcast.gateway';
-import { MempoolQueue } from './queues/mempool.queue';
-import { BlockQueue } from './queues/block.queue';
-import { TransactionQueue } from './queues/transaction.queue';
+import { RedisService } from '@Redis/redis.service';
+import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
+import { MempoolQueue } from '@Modules/indexer/queues/mempool.queue';
+import { BlockQueue } from '@Modules/indexer/queues/block.queue';
+import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
 
 @Injectable()
 export class IndexerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(IndexerService.name);
   private sockets: WebSocket[] = [];
-  private running = true;
 
   constructor(
     private readonly redisService: RedisService,
@@ -25,7 +24,7 @@ export class IndexerService implements OnModuleInit, OnModuleDestroy {
     private readonly transactionQueue: TransactionQueue,
   ) {}
 
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log('🚀 Starting IndexerService...');
     const nodeBase = process.env.NODE_URL ?? 'localhost';
 
@@ -40,8 +39,7 @@ export class IndexerService implements OnModuleInit, OnModuleDestroy {
     urls.forEach((u) => this.listenToRPCSocket(u));
   }
 
-  async onModuleDestroy() {
-    this.running = false;
+  onModuleDestroy() {
     this.logger.log('🛑 Stopping IndexerService and closing sockets...');
     this.sockets.forEach((s) => s.close());
   }

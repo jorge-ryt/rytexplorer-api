@@ -1,4 +1,3 @@
-// src/modules/indexer/ws-broadcast.gateway.ts
 import {
   WebSocketGateway,
   WebSocketServer,

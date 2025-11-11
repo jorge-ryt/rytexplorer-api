@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import serialize from 'serialize-javascript';
 
-import { RedisService } from '../../../redis/redis.service';
+import { RedisService } from '@Redis/redis.service';
 import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
 import { normalizeTxData, extractTxHash } from '../../../common/utils/tx-utils';
 
@@ -74,7 +74,6 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           deserialized = JSON.parse(value);
         } catch {
           try {
-            // eslint-disable-next-line no-eval
             deserialized = eval('(' + value + ')');
           } catch (err) {
             this.logger.error(

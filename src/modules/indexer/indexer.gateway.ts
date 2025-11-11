@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import WebSocket from 'ws';
-import { RedisService } from '../../redis/redis.service';
+import { RedisService } from '@Redis/redis.service';
 
 @Injectable()
 export class IndexerGateway implements OnModuleInit, OnModuleDestroy {
