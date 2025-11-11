@@ -33,8 +33,16 @@ type Query {
   getBlocks(lastId: String, limit: Int! = 10): BlocksWithCount!
   getTransactions(lastId: String, limit: Int! = 10): TransactionsWithCount!
   transaction(hash: String!): Transaction
-  transactionsByAddress(address: String!, lastId: String, limit: Int! = 10): TransactionsWithCount!
-  transactionsByBlock(block_number: String!, lastId: String, limit: Int! = 10): [Transaction!]!
+  transactionsByAddress(
+    address: String!
+    lastId: String
+    limit: Int! = 10
+  ): TransactionsWithCount!
+  transactionsByBlock(
+    block_number: String!
+    lastId: String
+    limit: Int! = 10
+  ): [Transaction!]!
 }
 
 type Transaction {

@@ -28,6 +28,7 @@
       "@Plugins/*": ["src/common/plugins/*"],
       "@Utils/*": ["src/common/utils/*"],
       "@Graphql/*": ["src/graphql/*"],
+      "@Config/*": ["src/config/*"],
       "@Modules/*": ["src/modules/*"],
       "@Prisma/*": ["src/prisma/*"],
       "@Redis/*": ["src/redis/*"]

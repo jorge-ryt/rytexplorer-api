@@ -4,10 +4,11 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
-import { RedisService } from '../../../redis/redis.service';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
-import { extractTxHash } from '../../../common/utils/tx-utils';
+
+import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
+import { PrismaService } from '@Prisma/prisma.service';
+import { RedisService } from '@Redis/redis.service';
+import { extractTxHash } from '@Utils/tx-utils';
 
 @Injectable()
 export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
@@ -69,8 +70,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
       return parsed;
     } catch (e) {
       try {
-        // eslint-disable-next-line no-eval
-        const evaluated = eval('(' + raw + ')');
+        const evaluated = eval(`(${raw})`);
         if (evaluated && evaluated.obj) return evaluated.obj;
         return evaluated;
       } catch (ee) {

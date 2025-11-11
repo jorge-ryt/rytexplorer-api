@@ -4,12 +4,14 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+
 import WebSocket from 'ws';
-import { RedisService } from '@Redis/redis.service';
+
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
-import { MempoolQueue } from '@Modules/indexer/queues/mempool.queue';
 import { BlockQueue } from '@Modules/indexer/queues/block.queue';
+import { MempoolQueue } from '@Modules/indexer/queues/mempool.queue';
 import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
+import { RedisService } from '@Redis/redis.service';
 
 @Injectable()
 export class IndexerService implements OnModuleInit, OnModuleDestroy {
@@ -94,7 +96,7 @@ export class IndexerService implements OnModuleInit, OnModuleDestroy {
             this.logger.debug(`RPC message: unhandled type ${type}`);
         }
       } catch (err) {
-        this.logger.error('Error processing RPC message: ' + err);
+        this.logger.error(`Error processing RPC message: ${err}`);
       }
     });
 

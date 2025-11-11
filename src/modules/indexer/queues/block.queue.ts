@@ -4,11 +4,13 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+
 import type { Block } from '@prisma/client';
-import { RedisService } from '@Redis/redis.service';
-import { PrismaService } from '@Prisma/prisma.service';
+
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
+import { PrismaService } from '@Prisma/prisma.service';
+import { RedisService } from '@Redis/redis.service';
 
 @Injectable()
 export class BlockQueue implements OnModuleInit, OnModuleDestroy {
@@ -77,7 +79,7 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
     } catch (e) {
       // fallback to eval for serialize-javascript format (legacy)
       try {
-        const evaluated = eval('(' + raw + ')');
+        const evaluated = eval(`(${raw})`);
         if (evaluated && evaluated.obj) return evaluated.obj;
         return evaluated;
       } catch (ee) {

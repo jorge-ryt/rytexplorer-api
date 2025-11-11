@@ -22,9 +22,7 @@ export function extractTxHash(item: any): string | null {
 
   if (!hash) {
     logger.verbose(
-      `[extractTxHash] Could not find hash in item: ${JSON.stringify(
-        item,
-      ).slice(0, 200)}...`,
+      `[extractTxHash] Could not find hash in item: ${JSON.stringify(item).slice(0, 200)}...`,
     );
   }
 

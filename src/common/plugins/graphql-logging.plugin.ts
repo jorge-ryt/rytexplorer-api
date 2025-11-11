@@ -1,6 +1,7 @@
 import { Plugin } from '@nestjs/apollo';
-import { ApolloServerPlugin } from '@apollo/server';
 import { Logger } from '@nestjs/common';
+
+import { ApolloServerPlugin } from '@apollo/server';
 
 @Plugin()
 export class GraphQLLoggingPlugin implements ApolloServerPlugin {
