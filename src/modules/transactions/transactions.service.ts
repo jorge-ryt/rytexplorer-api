@@ -24,7 +24,7 @@ export class TransactionsService {
       gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
       nonce: tx.nonce?.toString?.() ?? tx.nonce,
       // expose the scalar foreign-key `block_number` as `block` for GraphQL
-      block: tx.block_number ?? tx.block?.block_number ?? null,
+      block: tx.block_number ?? null,
     }));
 
     const count = await this.prisma.transaction.count();
@@ -50,7 +50,7 @@ export class TransactionsService {
       gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
       nonce: tx.nonce?.toString?.() ?? tx.nonce,
       // map scalar foreign-key to GraphQL field `block`
-      block: tx.block_number ?? tx.block?.block_number ?? null,
+      block: tx.block_number ?? null,
     };
   }
 
@@ -83,7 +83,7 @@ export class TransactionsService {
       gas_price: tx.gas_price?.toString?.() ?? tx.gas_price,
       nonce: tx.nonce?.toString?.() ?? tx.nonce,
       // include block number as `block` (either scalar or included relation)
-      block: tx.block_number ?? tx.block?.block_number ?? null,
+      block: tx.block_number ?? null,
     }));
 
     return { count, transactions: transactionsWithStringId };
