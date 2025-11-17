@@ -1,0 +1,76 @@
+version: '3.8'
+services:
+  # ----------------------------------------------------
+  # 1. POSTGRESQL (DB)
+  # ----------------------------------------------------
+  postgres:
+    image: postgres:alpine
+    container_name: rytexplorer_postgres
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_DATABASE}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_USER: ${DB_USER}
+    ports:
+      - 5435:5432
+    restart: on-failure:3
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+  # ----------------------------------------------------
+  # 2. PGWEB (ADMINISTRATOR OF POSTGRES)
+  # ----------------------------------------------------
+  pgweb:
+    image: sosedoff/pgweb
+    container_name: rytexplorer_pgweb
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      PGWEB_DATABASE_URL: postgres://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_DATABASE}?sslmode=disable
+    ports:
+      - 8085:8081
+    restart: on-failure:3
+  # ----------------------------------------------------
+  # 3. REDIS (CACHE/QUEUES)
+  # ----------------------------------------------------
+  redis:
+    image: redis:latest
+    container_name: rytexplorer_redis
+    command: redis-server
+    volumes:
+      - redis:/var/lib/redis
+      - redis-config:/usr/local/etc/redis/redis.conf
+    ports:
+      - 6379:6379
+    networks:
+      - redis-network
+  # ----------------------------------------------------
+  # 4. REDIS COMMANDER (ADMINISTRATOR DE REDIS)
+  # ----------------------------------------------------
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+      - HTTP_USER=root
+      - HTTP_PASSWORD=qwerty
+    ports:
+      - 8081:8081
+    networks:
+      - redis-network
+    depends_on:
+      - redis
+
+volumes:
+  redis:
+  redis-config:
+
+networks:
+  redis-network:
+    driver: bridge
