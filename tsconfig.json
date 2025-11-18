@@ -20,8 +20,20 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
+    "noFallthroughCasesInSwitch": false,
+    "paths": {
+      "@/*": ["src/*"],
+      "@Filters/*": ["src/common/filters/*"],
+      "@Pipes/*": ["src/common/pipes/*"],
+      "@Plugins/*": ["src/common/plugins/*"],
+      "@Utils/*": ["src/common/utils/*"],
+      "@Graphql/*": ["src/graphql/*"],
+      "@Config/*": ["src/config/*"],
+      "@Modules/*": ["src/modules/*"],
+      "@Prisma/*": ["src/prisma/*"],
+      "@Redis/*": ["src/redis/*"]
+    }
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "test/**/*.ts", "prisma.config.ts"],
   "exclude": ["node_modules", "dist"]
 }

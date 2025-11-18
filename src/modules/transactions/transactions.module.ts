@@ -1,7 +1,8 @@
 import { Module } from '@nestjs/common';
-import { TransactionsResolver } from './transactions.resolver';
-import { TransactionsService } from './transactions.service';
-import { PrismaModule } from '../../prisma/prisma.module';
+
+import { TransactionsResolver } from '@Modules/transactions/transactions.resolver';
+import { TransactionsService } from '@Modules/transactions/transactions.service';
+import { PrismaModule } from '@Prisma/prisma.module';
 
 @Module({
   imports: [PrismaModule],

@@ -4,11 +4,12 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+
 import serialize from 'serialize-javascript';
 
-import { RedisService } from '../../../redis/redis.service';
-import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
-import { normalizeTxData, extractTxHash } from '../../../common/utils/tx-utils';
+import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
+import { RedisService } from '@Redis/redis.service';
+import { normalizeTxData, extractTxHash } from '@Utils/tx-utils';
 
 @Injectable()
 export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
@@ -74,8 +75,7 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           deserialized = JSON.parse(value);
         } catch {
           try {
-            // eslint-disable-next-line no-eval
-            deserialized = eval('(' + value + ')');
+            deserialized = eval(`(${value})`);
           } catch (err) {
             this.logger.error(
               'Failed to parse mempool queue item, removing corrupt item',

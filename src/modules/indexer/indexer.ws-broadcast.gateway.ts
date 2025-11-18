@@ -1,4 +1,4 @@
-// src/modules/indexer/ws-broadcast.gateway.ts
+import { Logger } from '@nestjs/common';
 import {
   WebSocketGateway,
   WebSocketServer,
@@ -6,7 +6,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Logger } from '@nestjs/common';
+
 import { Server } from 'ws';
 
 @WebSocketGateway({ cors: true })

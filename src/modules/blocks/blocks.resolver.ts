@@ -1,7 +1,8 @@
 import { Resolver, Query, Args, Int } from '@nestjs/graphql';
-import { BlocksService } from './blocks.service';
-import { Block } from './entities/block.entity';
-import { BlocksWithCount } from './entities/blocks-with-count.entity';
+
+import { BlocksService } from '@Modules/blocks/blocks.service';
+import { Block } from '@Modules/blocks/entities/block.entity';
+import { BlocksWithCount } from '@Modules/blocks/entities/blocks-with-count.entity';
 
 @Resolver(() => Block)
 export class BlocksResolver {

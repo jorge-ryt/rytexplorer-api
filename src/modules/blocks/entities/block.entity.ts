@@ -1,5 +1,6 @@
 import { ObjectType, Field } from '@nestjs/graphql';
-import { Transaction } from '../../transactions/entities/transaction.entity';
+
+import { Transaction } from '@Modules/transactions/entities/transaction.entity';
 
 @ObjectType()
 export class Block {

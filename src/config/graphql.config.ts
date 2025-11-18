@@ -1,7 +1,8 @@
-import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
 
-import { GraphQLLoggingPlugin } from '../common/plugins/graphql-logging.plugin';
+import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
+
+import { GraphQLLoggingPlugin } from '@Plugins/graphql-logging.plugin';
 
 export const graphqlConfig: ApolloDriverConfig = {
   driver: ApolloDriver,

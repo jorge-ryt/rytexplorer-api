@@ -1,5 +1,6 @@
 import { ObjectType, Field, Int } from '@nestjs/graphql';
-import { Block } from './block.entity';
+
+import { Block } from '@Modules/blocks/entities/block.entity';
 
 @ObjectType()
 export class BlocksWithCount {

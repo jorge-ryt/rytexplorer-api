@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { GqlModule } from './graphql/gql.module';
-import { PrismaModule } from './prisma/prisma.module';
-import { BlocksModule } from './modules/blocks/blocks.module';
-import { TransactionsModule } from './modules/transactions/transactions.module';
-// import { AccountsModule } from './modules/accounts/accounts.module';
-import { RedisModule } from './redis/redis.module';
-import { IndexerModule } from './modules/indexer/indexer.module';
+
+import { GqlModule } from '@Graphql/gql.module';
+import { BlocksModule } from '@Modules/blocks/blocks.module';
+import { IndexerModule } from '@Modules/indexer/indexer.module';
+import { TransactionsModule } from '@Modules/transactions/transactions.module';
+import { PrismaModule } from '@Prisma/prisma.module';
+import { RedisModule } from '@Redis/redis.module';
 
 @Module({
   imports: [
@@ -16,7 +16,6 @@ import { IndexerModule } from './modules/indexer/indexer.module';
     IndexerModule,
     BlocksModule,
     TransactionsModule,
-    // AccountsModule,
     RedisModule,
   ],
 })
