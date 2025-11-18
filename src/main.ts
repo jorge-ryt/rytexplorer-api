@@ -5,14 +5,21 @@ import compression from 'compression';
 import { Logger } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { WsAdapter } from '@nestjs/platform-ws';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const server = express();
+  const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+
   const port = process.env.SERVER_PORT || 3000;
 
   app.use(helmet());
   app.use(compression());
-  app.enableCors();
+  app.enableCors({
+    origin: '*',
+    credentials: true,
+  });
   // Global error handling
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useWebSocketAdapter(new WsAdapter(app));

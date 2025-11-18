@@ -39,13 +39,13 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
   }
 
   // Consumer API: process items from redis list
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log(`Starting mempool queue listener on ${this.queueName}`);
     this.processQueue(this.queueName);
   }
 
   // Graceful shutdown
-  async onModuleDestroy() {
+  onModuleDestroy() {
     this.running = false;
     this.logger.log('Stopping mempool queue listener');
   }
@@ -74,7 +74,6 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
           deserialized = JSON.parse(value);
         } catch {
           try {
-            // eslint-disable-next-line no-eval
             deserialized = eval('(' + value + ')');
           } catch (err) {
             this.logger.error(
