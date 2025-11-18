@@ -14,6 +14,7 @@ export default defineConfig([
       'coverage/**',
       '.next/**',
       'build/**',
+      'scripts/**',
     ],
   },
   eslint.configs.recommended,
