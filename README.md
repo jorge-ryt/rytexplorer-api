@@ -105,3 +105,20 @@ pnpm run start:dev
 
 - pnpm run build
 - pnpm run start:prod
+
+### Docker
+
+```bash
+# 1. Start fresh
+docker-compose up -d
+
+# 2. Wait for Postgres to be healthy (10-15 seconds)
+docker-compose logs postgres
+
+# 3. Run migration
+pnpm run db:generate
+pnpm run db:migrate
+
+# 4. Check tables
+docker exec -it rytexplorer_postgres psql -U postgres -d "Bryt-BlockClient-Indexer-New-Explorer" -c "\dt"
+```
