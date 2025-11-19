@@ -40,19 +40,19 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
   }
 
   // Consumer API: process items from redis list
-  async onModuleInit() {
+  onModuleInit() {
     this.logger.log(`Starting mempool queue listener on ${this.queueName}`);
     this.processQueue(this.queueName);
   }
 
   // Graceful shutdown
-  async onModuleDestroy() {
+  onModuleDestroy() {
     this.running = false;
     this.logger.log('Stopping mempool queue listener');
   }
 
   // Utility: sleep
-  private async sleep(ms: number) {
+  private sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
