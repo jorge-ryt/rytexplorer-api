@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { GqlExecutionContext } from '@nestjs/graphql';
-import { WalletAuthService } from 'src/modules/wallet-auth/wallet-auth.service';
+import { WalletAuthService } from '@Modules/wallet-auth/wallet-auth.service';
 
 interface GqlRequest {
   headers: Record<string, string | undefined>;
