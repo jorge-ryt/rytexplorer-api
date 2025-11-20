@@ -1,7 +1,8 @@
 import { Resolver, Query, Args, Int } from '@nestjs/graphql';
-import { TransactionsService } from './transactions.service';
-import { Transaction } from './entities/transaction.entity';
-import { TransactionsWithCount } from './entities/transactions-with-count.entity';
+
+import { Transaction } from '@Modules/transactions/entities/transaction.entity';
+import { TransactionsWithCount } from '@Modules/transactions/entities/transactions-with-count.entity';
+import { TransactionsService } from '@Modules/transactions/transactions.service';
 
 @Resolver()
 export class TransactionsResolver {

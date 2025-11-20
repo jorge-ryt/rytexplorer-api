@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
-import { IndexerService } from './indexer.service';
-import { RedisModule } from '../../redis/redis.module';
-import { PrismaModule } from '../../prisma/prisma.module';
-import { WsBroadcastGateway } from './indexer.ws-broadcast.gateway';
-import { MempoolQueue } from './queues/mempool.queue';
-import { BlockQueue } from './queues/block.queue';
-import { TransactionQueue } from './queues/transaction.queue';
+
+import { IndexerService } from '@Modules/indexer/indexer.service';
+import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
+import { BlockQueue } from '@Modules/indexer/queues/block.queue';
+import { MempoolQueue } from '@Modules/indexer/queues/mempool.queue';
+import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
+import { PrismaModule } from '@Prisma/prisma.module';
+import { RedisModule } from '@Redis/redis.module';
 
 @Module({
   imports: [RedisModule, PrismaModule],

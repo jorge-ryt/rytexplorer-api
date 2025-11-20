@@ -5,11 +5,11 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import { RedisService } from '../../../redis/redis.service';
-import { PrismaService } from '../../../prisma/prisma.service';
-import { WsBroadcastGateway } from '../indexer.ws-broadcast.gateway';
-import { extractTxHash } from '../../../common/utils/tx-utils';
-import { IEpochData, ITransaction } from 'src/common/interfaces/transactions';
+import { IEpochData, ITransaction } from '@/common/interfaces/transactions';
+import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
+import { PrismaService } from '@Prisma/prisma.service';
+import { RedisService } from '@Redis/redis.service';
+import { extractTxHash } from '@Utils/tx-utils';
 
 type UnknownRecord = Record<string, unknown>;
 
@@ -140,7 +140,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     } catch {
       try {
         // legacy fallback for serialize-javascript encoded payloads
-        const evaluated: unknown = eval('(' + raw + ')');
+        const evaluated: unknown = eval(`(${raw})`);
 
         if (isObject(evaluated) && 'obj' in evaluated) {
           const inner = (evaluated as Record<string, unknown>).obj;
