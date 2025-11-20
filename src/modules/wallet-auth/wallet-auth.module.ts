@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
-import { WalletAuthService } from './wallet-auth.service';
-import { WalletAuthResolver } from './wallet-auth.resolver';
-import { PrismaService } from '../../prisma/prisma.service';
-import { GqlAuthGuard } from '../../common/guards/gql-auth.guard';
-import { JwtUtils } from 'src/common/utils/jwt.utils';
-import { CryptoUtils } from 'src/common/utils/crypto.utils';
+import { WalletAuthService } from '@Modules/wallet-auth/wallet-auth.service';
+import { WalletAuthResolver } from '@Modules/wallet-auth/wallet-auth.resolver';
+import { PrismaService } from '@Prisma/prisma.service';
+import { GqlAuthGuard } from '@Guards/gql-auth.guard';
+import { JwtUtils } from '@Utils/jwt.utils';
+import { CryptoUtils } from '@Utils/crypto.utils';
 
 @Module({
   providers: [

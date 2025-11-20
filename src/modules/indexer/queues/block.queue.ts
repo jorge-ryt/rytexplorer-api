@@ -9,7 +9,7 @@ import type { Block } from '@prisma/client';
 
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
-import { IBlock, IBlockData } from '@/common/interfaces/blocks';
+import { IBlock, IBlockData } from '@Interfaces/blocks';
 import { PrismaService } from '@Prisma/prisma.service';
 import { RedisService } from '@Redis/redis.service';
 

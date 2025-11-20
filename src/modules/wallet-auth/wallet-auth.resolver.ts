@@ -1,7 +1,7 @@
 import { Resolver, Mutation, Args, Context } from '@nestjs/graphql';
 import type { Response } from 'express';
 
-import { WalletAuthService } from './wallet-auth.service';
+import { WalletAuthService } from '@Modules/wallet-auth/wallet-auth.service';
 import {
   RequestMessageInput,
   VerifySignatureInput,
