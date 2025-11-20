@@ -105,3 +105,28 @@ pnpm run start:dev
 
 - pnpm run build
 - pnpm run start:prod
+
+### 🐋 Docker Automatization
+
+Before starting, ensure your machine meets the minimum requirements, especially concerning virtualization, as Docker Desktop runs containers inside a light-weight Linux Virtual Machine (VM).
+
+- Windows: Requires Windows 10/11 64-bit Pro, Enterprise, or Education (or Home with WSL 2 enabled). Requires a 64-bit processor with SLAT and at least 4GB of RAM. You must enable Hardware Virtualization in your computer's BIOS/UEFI settings.
+
+- Mac: Requires macOS 10.15 (Catalina) or newer and at least 4GB of RAM. Compatible with both Intel and Apple Silicon (M1/M2/M3) chips.
+
+- Linux: Can use Docker Desktop (for Ubuntu) or the native Docker Engine. Requires a 64-bit kernel and CPU support for virtualization (KVM).
+
+#### ⏬ Download Docker Desktop
+
+- Go to the official [Docker website.](https://www.docker.com/)
+- Select the correct installer package for your operating system and processor (e.g., Windows AMD64, Mac Apple Silicon).
+
+#### ⚡ Use Automatization
+
+```bash
+# First time setup
+pnpm run setup
+
+# After, just restart everything (faster)
+pnpm run start
+```
