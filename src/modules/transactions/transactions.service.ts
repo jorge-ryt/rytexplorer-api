@@ -36,9 +36,7 @@ export class TransactionsService {
     const tx = await this.prisma.transaction.findUnique({
       where: { hash },
     });
-
     if (!tx) return null;
-
     // Convert BigInt ID to string
     return {
       ...tx,

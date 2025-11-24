@@ -1,6 +1,6 @@
-import { IBlock } from './blocks';
+import { Block } from '@Interfaces/blocks';
 
-export interface ITransaction {
+export interface Transaction {
   id: bigint;
   hash: string;
   transaction_Status: string;
@@ -19,11 +19,11 @@ export interface ITransaction {
   gas_price: string;
   input: string;
 
-  block?: IBlock;
+  block?: Block;
   block_number?: string;
 }
 
-export interface IEpochData {
+export interface EpochData {
   epochCycle: number;
   hashes: `0x${string}`[];
   hashesHex: string;

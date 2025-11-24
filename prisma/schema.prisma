@@ -79,7 +79,7 @@ model TransactionHistory {
 
   @@map("transactionHistory")
 }
- 
+
 model globalStats {
   id                 String @id @default(uuid()) @db.Uuid
   ryt_price          BigInt
@@ -108,4 +108,14 @@ model Token {
   onchain_mkt_cap     BigInt
   holders             BigInt
 }
- 
+
+model NFTs {
+  id       String @id @default(uuid()) @db.Uuid
+  name     String @db.VarChar(255)
+  type     String @db.VarChar(255)
+  min_price     String @db.VarChar(255)
+  max_price     String @db.VarChar(255)
+  transfers     String @db.VarChar(255)
+  owners        String @db.VarChar(255)
+  total_assets  String @db.VarChar(255)
+}

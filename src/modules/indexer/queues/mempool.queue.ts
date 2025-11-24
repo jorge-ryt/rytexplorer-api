@@ -52,7 +52,7 @@ export class MempoolQueue implements OnModuleInit, OnModuleDestroy {
   }
 
   // Utility: sleep
-  private async sleep(ms: number) {
+  private sleep(ms: number) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 

@@ -5,15 +5,15 @@ import {
   OnModuleDestroy,
 } from '@nestjs/common';
 
-import type { Block } from '@prisma/client';
+import type { Block as PrismaBlock } from '@prisma/client';
 
+import { Block, BlockData } from '@Interfaces/blocks';
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { TransactionQueue } from '@Modules/indexer/queues/transaction.queue';
-import { IBlock, IBlockData } from '@Interfaces/blocks';
 import { PrismaService } from '@Prisma/prisma.service';
 import { RedisService } from '@Redis/redis.service';
 
-type ParsedPayload = IBlockData | { block: IBlockData };
+type ParsedPayload = BlockData | { block: BlockData };
 
 @Injectable()
 export class BlockQueue implements OnModuleInit, OnModuleDestroy {
@@ -30,7 +30,7 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   /** Public API — enqueue a new block into Redis */
-  async enqueue(blockData: IBlockData): Promise<void> {
+  async enqueue(blockData: BlockData): Promise<void> {
     const redis = this.redisService.getClient();
     this.logger.debug(`🧱 blockData ${JSON.stringify(blockData)}`);
     try {
@@ -62,12 +62,12 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Stopping BlockQueue');
   }
 
-  private async sleep(ms: number) {
+  private sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
   }
 
-  /** Type guard to validate an object is a valid IBlockData */
-  private isIBlockData(obj: unknown): obj is IBlockData {
+  /** Type guard to validate an object is a valid BlockData */
+  private isBlockData(obj: unknown): obj is BlockData {
     if (typeof obj !== 'object' || obj === null) return false;
     const b = obj as Record<string, unknown>;
     return (
@@ -88,43 +88,43 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
         typeof parsed === 'object' &&
         parsed !== null &&
         'obj' in parsed &&
-        this.isIBlockData((parsed as { obj: unknown }).obj)
+        this.isBlockData((parsed as { obj: unknown }).obj)
       ) {
-        return { block: (parsed as { obj: IBlockData }).obj };
+        return { block: (parsed as { obj: BlockData }).obj };
       }
 
-      if (this.isIBlockData(parsed)) return parsed;
+      if (this.isBlockData(parsed)) return parsed;
 
       if (
         typeof parsed === 'object' &&
         parsed !== null &&
         'block' in parsed &&
-        this.isIBlockData((parsed as { block: unknown }).block)
+        this.isBlockData((parsed as { block: unknown }).block)
       ) {
-        return parsed as { block: IBlockData };
+        return parsed as { block: BlockData };
       }
 
       return null;
     } catch {
       // Try legacy eval-based format
       try {
-        const evaluated = eval('(' + raw + ')') as unknown;
+        const evaluated = eval(`(${raw})`) as unknown;
         if (
           typeof evaluated === 'object' &&
           evaluated !== null &&
           'obj' in evaluated &&
-          this.isIBlockData((evaluated as { obj: unknown }).obj)
+          this.isBlockData((evaluated as { obj: unknown }).obj)
         ) {
-          return { block: (evaluated as { obj: IBlockData }).obj };
+          return { block: (evaluated as { obj: BlockData }).obj };
         }
-        if (this.isIBlockData(evaluated)) return evaluated;
+        if (this.isBlockData(evaluated)) return evaluated;
         if (
           typeof evaluated === 'object' &&
           evaluated !== null &&
           'block' in evaluated &&
-          this.isIBlockData((evaluated as { block: unknown }).block)
+          this.isBlockData((evaluated as { block: unknown }).block)
         ) {
-          return evaluated as { block: IBlockData };
+          return evaluated as { block: BlockData };
         }
         return null;
       } catch (err) {
@@ -154,8 +154,7 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
             continue;
           }
 
-          const block: IBlockData =
-            'block' in payload ? payload.block : payload;
+          const block: BlockData = 'block' in payload ? payload.block : payload;
 
           const blockHash = block.block_hash;
           const blockNumber = block.block_number;
@@ -169,7 +168,7 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
             continue;
           }
 
-          let exists: Block | null = null;
+          let exists: PrismaBlock | null = null;
           if (blockHash) {
             exists = await this.prisma.block
               .findUnique({ where: { block_hash: blockHash } })
@@ -196,7 +195,7 @@ export class BlockQueue implements OnModuleInit, OnModuleDestroy {
             ? block.transactions.length
             : 0;
 
-          const createData: IBlock = {
+          const createData: Block = {
             id: BigInt(block.block_number ?? blockNumber),
             version: String(block.version ?? 1),
             merkle_root: block.merkle_root ?? null,
