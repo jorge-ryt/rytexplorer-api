@@ -4,8 +4,10 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+
 import type { Prisma } from '@prisma/client';
-import { IEpochData, ITransaction } from '@Interfaces/transactions';
+
+import { EpochData, Transaction } from '@Interfaces/transactions';
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { PrismaService } from '@Prisma/prisma.service';
 import { RedisService } from '@Redis/redis.service';
@@ -20,7 +22,7 @@ function isObject(u: unknown): u is UnknownRecord {
   return typeof u === 'object' && u !== null;
 }
 
-function isEpochData(value: unknown): value is IEpochData {
+function isEpochData(value: unknown): value is EpochData {
   if (typeof value !== 'object' || value === null) return false;
   const v = value as Record<string, unknown>;
 
@@ -73,7 +75,7 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   /** Public API — enqueue new transaction(s) into Redis */
-  async enqueue(txData: IEpochData | Partial<ITransaction>): Promise<void> {
+  async enqueue(txData: EpochData | Partial<Transaction>): Promise<void> {
     const redis = this.redisService.getClient();
     this.logger.debug(`💸 txData data ${JSON.stringify(txData)}`);
     try {
@@ -120,12 +122,12 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
   }
 
   // Utility: sleep
-  private async sleep(ms: number) {
+  private sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
   }
 
   // Utility: parse payload from Redis (returns unknown, safe to inspect)
-  private parsePayload(raw: string): IEpochData | null {
+  private parsePayload(raw: string): EpochData | null {
     try {
       const parsed: unknown = JSON.parse(raw);
 

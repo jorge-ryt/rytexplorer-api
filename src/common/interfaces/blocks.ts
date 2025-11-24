@@ -1,4 +1,4 @@
-export interface IBlock {
+export interface Block {
   id: bigint;
   block_hash: string;
   version: string;
@@ -18,7 +18,7 @@ export interface IBlock {
   blockTxnsCount: number;
 }
 
-export interface IBlockData {
+export interface BlockData {
   version: number;
   merkle_root: string;
   block_number: number;

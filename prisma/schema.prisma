@@ -115,7 +115,7 @@ model NFTs {
   type     String @db.VarChar(255)
   min_price     String @db.VarChar(255)
   max_price     String @db.VarChar(255)
-  transfers String @db.VarChar(255)
-  owners String @db.VarChar(255)
-  total_assets String @db.VarChar(255)
+  transfers     String @db.VarChar(255)
+  owners        String @db.VarChar(255)
+  total_assets  String @db.VarChar(255)
 }

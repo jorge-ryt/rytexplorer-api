@@ -1,41 +1,31 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger } from '@nestjs/common';
 
+import { NFTs, NFTsTopResponse } from '@Interfaces/ntfs';
 import { PrismaService } from '@Prisma/prisma.service';
 
-interface NFTs {
-  id: string;
-  name: string;
-  type: string;
-  min_price: string;
-  max_price: string;
-  transfers: string;
-  owners: string;
-  total_assets: string;
-}
-interface NFTsTopResponse {
-  count: number;
-  topNfts: NFTs[];
-}
 @Injectable()
 export class NftsService {
+  private readonly logger = new Logger(NftsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
 
   async getTop(limit: number, lastId?: string): Promise<NFTsTopResponse> {
     try {
-      const [topNfts, count] = await Promise.all([
+      const queries: [Promise<NFTs[]>, Promise<number>] = [
         this.prisma.nFTs.findMany({
           take: limit,
           ...(lastId && { cursor: { id: lastId }, skip: 1 }),
           orderBy: { id: 'desc' },
         }),
         this.prisma.nFTs.count(),
-      ]);
+      ];
+
+      const [topNfts, count] = await Promise.all(queries);
 
       return { count, topNfts };
-    } catch (error) {
-      this.logger.error(
-        `Failed to fetch top NFTs: ${(error as Error).message}`,
-      );
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to fetch top NFTs: ${message}`);
       throw new BadRequestException('Failed to fetch top NFTs');
     }
   }
