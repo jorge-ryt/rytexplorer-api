@@ -1,11 +1,22 @@
 -- CreateTable
+CREATE TABLE "WalletUser" (
+    "id" TEXT NOT NULL,
+    "address" TEXT NOT NULL,
+    "nonce" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "WalletUser_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "blocks" (
     "block_hash" VARCHAR(255) NOT NULL,
     "id" BIGSERIAL NOT NULL,
     "version" VARCHAR(255) NOT NULL,
     "merkle_root" VARCHAR(255) NOT NULL,
     "block_number" VARCHAR(255) NOT NULL,
-    "block_status" VARCHAR(255) NOT NULL DEFAULT 'confirmed',
+    "block_status" VARCHAR(255) DEFAULT 'confirmed',
     "previous_hash" VARCHAR(255) NOT NULL,
     "state_root" VARCHAR(255) NOT NULL,
     "transaction_root" VARCHAR(255) NOT NULL,
@@ -16,6 +27,7 @@ CREATE TABLE "blocks" (
     "value" VARCHAR(255) NOT NULL,
     "data" VARCHAR(255) NOT NULL,
     "to" VARCHAR(255) NOT NULL,
+    "blockTxnsCount" INTEGER NOT NULL DEFAULT 0,
 
     CONSTRAINT "blocks_pkey" PRIMARY KEY ("id")
 );
@@ -24,14 +36,13 @@ CREATE TABLE "blocks" (
 CREATE TABLE "transactions" (
     "hash" VARCHAR(255) NOT NULL,
     "id" BIGSERIAL NOT NULL,
-    "transaction_Status" VARCHAR(255) NOT NULL,
+    "transaction_Status" VARCHAR(255) NOT NULL DEFAULT 'Pending',
     "from" VARCHAR(255) NOT NULL,
     "to" VARCHAR(255) NOT NULL,
     "value" VARCHAR(255) NOT NULL,
     "transaction_time" VARCHAR(255),
-    "transaction_status" BOOLEAN,
     "functionType" VARCHAR(255) NOT NULL,
-    "unix_timestamp" VARCHAR(255),
+    "unix_timestamp" BIGINT,
     "Status" BOOLEAN,
     "State" BOOLEAN,
     "nonce" VARCHAR(255) NOT NULL,
@@ -40,43 +51,24 @@ CREATE TABLE "transactions" (
     "gas" VARCHAR(255) NOT NULL,
     "gas_price" VARCHAR(255) NOT NULL,
     "input" TEXT NOT NULL,
-    "block_id" BIGINT,
+    "block_number" TEXT,
 
     CONSTRAINT "transactions_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "alerts" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "block_number" VARCHAR(255) NOT NULL,
-    "block_status" VARCHAR(255) NOT NULL,
-
-    CONSTRAINT "alerts_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "transactionHistory" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" UUID NOT NULL,
     "date" VARCHAR(255) NOT NULL,
     "transactions" BIGINT NOT NULL,
+    "txn_type" VARCHAR(255) NOT NULL,
 
     CONSTRAINT "transactionHistory_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "replayBlocks" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
-    "replayBlocks" BOOLEAN DEFAULT false,
-    "lastBlock" VARCHAR(255),
-    "latestBlock" VARCHAR(255),
-    "Status" VARCHAR(255),
-
-    CONSTRAINT "replayBlocks_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "globalStats" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" UUID NOT NULL,
     "ryt_price" BIGINT NOT NULL,
     "market_cap" BIGINT NOT NULL,
     "total_transactions" BIGINT NOT NULL,
@@ -90,26 +82,8 @@ CREATE TABLE "globalStats" (
 );
 
 -- CreateTable
-CREATE TABLE "knex_migrations" (
-    "id" SERIAL NOT NULL,
-    "name" VARCHAR(255),
-    "batch" INTEGER,
-    "migration_time" TIMESTAMPTZ(6),
-
-    CONSTRAINT "knex_migrations_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
-CREATE TABLE "knex_migrations_lock" (
-    "index" SERIAL NOT NULL,
-    "is_locked" INTEGER,
-
-    CONSTRAINT "knex_migrations_lock_pkey" PRIMARY KEY ("index")
-);
-
--- CreateTable
 CREATE TABLE "nodesMap" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+    "id" UUID NOT NULL,
     "type" VARCHAR(255) NOT NULL,
     "location" JSONB NOT NULL,
     "label" VARCHAR(255),
@@ -119,13 +93,20 @@ CREATE TABLE "nodesMap" (
 );
 
 -- CreateTable
-CREATE TABLE "tokenInfo" (
-    "id" UUID NOT NULL DEFAULT gen_random_uuid(),
+CREATE TABLE "Token" (
+    "id" UUID NOT NULL,
     "price" BIGINT NOT NULL,
-    "gas_price" BIGINT NOT NULL,
+    "change" DOUBLE PRECISION NOT NULL,
+    "volume" BIGINT NOT NULL,
+    "circulating_mkt_cap" BIGINT NOT NULL,
+    "onchain_mkt_cap" BIGINT NOT NULL,
+    "holders" BIGINT NOT NULL,
 
-    CONSTRAINT "tokenInfo_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "Token_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "WalletUser_address_key" ON "WalletUser"("address");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "blocks_block_hash_key" ON "blocks"("block_hash");
@@ -161,4 +142,4 @@ CREATE INDEX "idx_transactions_to_id_desc" ON "transactions"("to", "id" DESC);
 CREATE INDEX "idx_transactions_id_desc" ON "transactions"("id" DESC);
 
 -- AddForeignKey
-ALTER TABLE "transactions" ADD CONSTRAINT "transactions_block_id_fkey" FOREIGN KEY ("block_id") REFERENCES "blocks"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "transactions" ADD CONSTRAINT "transactions_block_number_fkey" FOREIGN KEY ("block_number") REFERENCES "blocks"("block_number") ON DELETE SET NULL ON UPDATE CASCADE;

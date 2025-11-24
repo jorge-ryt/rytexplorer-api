@@ -31,7 +31,9 @@
       "@Config/*": ["src/config/*"],
       "@Modules/*": ["src/modules/*"],
       "@Prisma/*": ["src/prisma/*"],
-      "@Redis/*": ["src/redis/*"]
+      "@Redis/*": ["src/redis/*"],
+      "@Interfaces/*": ["src/common/interfaces/*"],
+      "@Guards/*": ["src/common/guards/*"]
     }
   },
   "include": ["src/**/*", "test/**/*.ts", "prisma.config.ts"],

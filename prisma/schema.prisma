@@ -7,6 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model WalletUser {
+  id          String   @id @default(uuid())
+  address     String   @unique
+  nonce       String
+  timestamp   String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 model Block {
   block_hash       String        @unique @db.VarChar(255)
   id               BigInt        @id @default(autoincrement())
@@ -62,33 +71,15 @@ model Transaction {
   @@index([id(sort: Desc)], map: "idx_transactions_id_desc")
   @@map("transactions")
 }
-
-model Alert {
-  id           String @id @default(uuid()) @db.Uuid
-  block_number String @db.VarChar(255)
-  block_status String @db.VarChar(255)
-
-  @@map("alerts")
-}
-
 model TransactionHistory {
   id           String @id @default(uuid()) @db.Uuid
   date         String @db.VarChar(255)
   transactions BigInt
+  txn_type         String @db.VarChar(255)
 
   @@map("transactionHistory")
 }
-
-model ReplayBlocks {
-  id           String   @id @default(uuid()) @db.Uuid
-  replayBlocks Boolean? @default(false)
-  lastBlock    String?  @db.VarChar(255)
-  latestBlock  String?  @db.VarChar(255)
-  Status       String?  @db.VarChar(255)
-
-  @@map("replayBlocks")
-}
-
+ 
 model globalStats {
   id                 String @id @default(uuid()) @db.Uuid
   ryt_price          BigInt
@@ -100,20 +91,7 @@ model globalStats {
   validators         BigInt
   rpc_nodes          BigInt
 }
-
-model knex_migrations {
-  id             Int       @id @default(autoincrement())
-  name           String?   @db.VarChar(255)
-  batch          Int?
-  migration_time DateTime? @db.Timestamptz(6)
-}
-
-model knex_migrations_lock {
-  index     Int  @id @default(autoincrement())
-  is_locked Int?
-}
-
-model nodesMap {
+ model nodesMap {
   id       String  @id @default(uuid()) @db.Uuid
   type     String  @db.VarChar(255)
   location Json
@@ -121,8 +99,13 @@ model nodesMap {
   node_id  String  @db.VarChar(255)
 }
 
-model tokenInfo {
-  id        String @id @default(uuid()) @db.Uuid
-  price     BigInt
-  gas_price BigInt
+model Token {
+  id                  String @id @default(uuid()) @db.Uuid
+  price               BigInt
+  change              Float
+  volume              BigInt
+  circulating_mkt_cap BigInt
+  onchain_mkt_cap     BigInt
+  holders             BigInt
 }
+ 

@@ -4,12 +4,61 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
-
+import type { Prisma } from '@prisma/client';
+import { IEpochData, ITransaction } from '@Interfaces/transactions';
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { PrismaService } from '@Prisma/prisma.service';
 import { RedisService } from '@Redis/redis.service';
 import { extractTxHash } from '@Utils/tx-utils';
 
+type UnknownRecord = Record<string, unknown>;
+
+/**
+ * Helpers to safely extract values from unknown objects (no `any`)
+ */
+function isObject(u: unknown): u is UnknownRecord {
+  return typeof u === 'object' && u !== null;
+}
+
+function isEpochData(value: unknown): value is IEpochData {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+
+  return (
+    typeof v.epochCycle === 'number' &&
+    Array.isArray(v.hashes) &&
+    v.hashes.every((h) => typeof h === 'string') &&
+    typeof v.hashesHex === 'string'
+  );
+}
+
+function getString(obj: unknown, ...keys: string[]): string | null {
+  if (!isObject(obj)) return null;
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'string') return v;
+    if (typeof v === 'number') return String(v);
+    if (typeof v === 'bigint') return v.toString();
+  }
+  return null;
+}
+
+function getBigInt(obj: unknown, ...keys: string[]): bigint | null {
+  if (!isObject(obj)) return null;
+  for (const k of keys) {
+    const v = obj[k];
+    if (typeof v === 'bigint') return v;
+    if (typeof v === 'number' && Number.isInteger(v)) return BigInt(v);
+    if (typeof v === 'string' && /^\d+$/.test(v)) return BigInt(v);
+  }
+  return null;
+}
+
+/**
+ * TransactionQueue - processes transaction payloads saved in Redis.
+ *  - fully typed (no `any`)
+ *  - builds Prisma.TransactionCreateInput objects for create()
+ */
 @Injectable()
 export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(TransactionQueue.name);
@@ -24,9 +73,9 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
   ) {}
 
   /** Public API — enqueue new transaction(s) into Redis */
-  async enqueue(txData: any): Promise<void> {
+  async enqueue(txData: IEpochData | Partial<ITransaction>): Promise<void> {
     const redis = this.redisService.getClient();
-
+    this.logger.debug(`💸 txData data ${JSON.stringify(txData)}`);
     try {
       if (!txData) {
         this.logger.warn('Attempted to enqueue empty transaction data');
@@ -36,7 +85,20 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
       const serialized = JSON.stringify(txData);
       await redis.rpush(this.queueKey, serialized);
 
-      const txHash = extractTxHash(txData) ?? 'unknown';
+      let txHash;
+
+      if (isEpochData(txData)) {
+        txHash =
+          'hash' in txData
+            ? txData.hash
+            : Array.isArray(txData.hashes)
+              ? txData.hashes[0]
+              : 'unknown';
+      } else if (typeof txData === 'object') {
+        txHash = extractTxHash(txData) ?? 'unknown';
+      }
+
+      this.logger.debug(`💸 Enqueued transaction ${txHash}`);
       this.logger.debug(`💸 Enqueued transaction ${txHash}`);
     } catch (err) {
       this.logger.error('Failed to enqueue transaction', err);
@@ -62,17 +124,32 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
     return new Promise((r) => setTimeout(r, ms));
   }
 
-  // Utility: parse payload from Redis
-  private parsePayload(raw: string) {
+  // Utility: parse payload from Redis (returns unknown, safe to inspect)
+  private parsePayload(raw: string): IEpochData | null {
     try {
-      const parsed = JSON.parse(raw);
-      if (parsed && parsed.obj) return parsed.obj;
-      return parsed;
-    } catch (e) {
+      const parsed: unknown = JSON.parse(raw);
+
+      if (isObject(parsed) && 'obj' in parsed) {
+        const inner = (parsed as Record<string, unknown>).obj;
+        if (isEpochData(inner)) return inner;
+      }
+
+      if (isEpochData(parsed)) return parsed;
+
+      return null;
+    } catch {
       try {
-        const evaluated = eval(`(${raw})`);
-        if (evaluated && evaluated.obj) return evaluated.obj;
-        return evaluated;
+        // legacy fallback for serialize-javascript encoded payloads
+        const evaluated: unknown = eval(`(${raw})`);
+
+        if (isObject(evaluated) && 'obj' in evaluated) {
+          const inner = (evaluated as Record<string, unknown>).obj;
+          if (isEpochData(inner)) return inner;
+        }
+
+        if (isEpochData(evaluated)) return evaluated;
+
+        return null;
       } catch (ee) {
         this.logger.error('Failed to parse Redis tx payload', ee);
         return null;
@@ -102,16 +179,37 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
           }
 
           // payload may be an array of txs, or an object representing one tx (depending on producer)
-          const txItems = Array.isArray(payload)
-            ? payload
-            : (payload.data ?? payload);
+          let txItems: unknown;
+          if (Array.isArray(payload)) {
+            txItems = payload;
+          } else if (isObject(payload) && 'data' in payload) {
+            txItems = payload.data;
+          } else {
+            txItems = payload;
+          }
 
           // normalize to array
-          const txArray = Array.isArray(txItems) ? txItems : [txItems];
+          const txArray: unknown[] = Array.isArray(txItems)
+            ? txItems
+            : [txItems];
 
           for (const item of txArray) {
-            const tx = item.TransferObj ?? item; // some payloads wrap actual transfer data inside TransferObj
-            const txHash = tx.hash ?? tx.Hash ?? item.hash ?? item.Hash ?? null;
+            // item can be different shapes. read safely using helpers
+            const txCandidate =
+              isObject(item) && 'TransferObj' in item ? item.TransferObj : item;
+
+            // The tx object may live in txCandidate or item
+            const tx = isObject(txCandidate)
+              ? txCandidate
+              : isObject(item)
+                ? item
+                : {};
+
+            const txHash =
+              getString(tx, 'hash', 'Hash') ??
+              getString(item, 'hash', 'Hash') ??
+              null;
+
             if (!txHash) {
               this.logger.warn('Transaction missing hash, skipping', tx);
               continue;
@@ -127,44 +225,61 @@ export class TransactionQueue implements OnModuleInit, OnModuleDestroy {
               this.logger.debug(`Duplicate transaction (skipping): ${txHash}`);
               continue;
             }
+
             // Try multiple common locations for block number — prefer the normalized `tx` object
             const rawBlockNumber =
-              tx.block ??
-              tx.block_number ??
-              tx.blockNumber ??
-              item.block ??
-              item.block_number ??
-              item.blockNumber ??
+              getString(tx, 'block', 'block_number', 'blockNumber') ??
+              getString(item, 'block', 'block_number', 'blockNumber') ??
               '';
             const blockNumber =
-              rawBlockNumber !== '' ? String(rawBlockNumber) : '';
+              rawBlockNumber !== '' ? rawBlockNumber : undefined;
 
-            // Map your tx structure to Prisma create data
-            const createData: any = {
-              id: item.id ?? undefined,
-              transaction_Status:
-                item.transaction_Status ?? item.transactionStatus ?? 'Pending',
+            // Build Prisma.TransactionCreateInput safely
+            const createData: Prisma.TransactionCreateInput = {
+              // required fields according to your Prisma model must be present
               hash: txHash,
+              transaction_Status:
+                getString(item, 'transaction_Status', 'transactionStatus') ??
+                'Pending',
+              from: getString(tx, 'from') ?? getString(item, 'from') ?? '',
+              to: getString(tx, 'to') ?? getString(item, 'to') ?? '',
+              value: getString(tx, 'value') ?? getString(item, 'value') ?? '0',
+              transaction_time: getString(item, 'transaction_time') ?? null,
+              functionType:
+                getString(tx, 'functionType') ?? getString(item, 'type') ?? '',
+              unix_timestamp:
+                getBigInt(item, 'unix_timestamp') ??
+                getBigInt(tx, 'unix_timestamp') ??
+                null,
+              Status: (() => {
+                const v =
+                  (isObject(item) ? item.Status : undefined) ??
+                  (isObject(tx) ? tx.Status : undefined);
+                return typeof v === 'boolean' ? v : null;
+              })(),
+              State: (() => {
+                const v =
+                  (isObject(item) ? item.State : undefined) ??
+                  (isObject(tx) ? tx.State : undefined);
+                return typeof v === 'boolean' ? v : null;
+              })(),
+              nonce: getString(tx, 'nonce') ?? getString(item, 'nonce') ?? '',
+              type: getString(tx, 'type') ?? getString(item, 'type') ?? '',
+              node_id:
+                getString(tx, 'node_id') ?? getString(item, 'node_id') ?? '',
+              gas: getString(tx, 'gas') ?? getString(item, 'gas') ?? '0',
+              gas_price:
+                getString(tx, 'gas_price') ??
+                getString(item, 'gas_price') ??
+                '0',
+              input: getString(tx, 'input') ?? getString(item, 'input') ?? '',
+              // relation to block (only include if we have a blockNumber)
               ...(blockNumber
                 ? { block: { connect: { block_number: blockNumber } } }
                 : {}),
-              from: tx.from ?? item.from ?? null,
-              to: tx.to ?? item.to ?? null,
-              value: String(tx.value ?? item.value ?? '0'),
-              transaction_time: item.transaction_time ?? null,
-              functionType: item.functionType ?? item.type ?? null,
-              unix_timestamp: item.unix_timestamp ?? null,
-              Status: item.Status ?? null,
-              State: item.State ?? null,
-              nonce: String(tx.nonce ?? item.nonce ?? ''),
-              type: String(tx.type ?? item.type ?? '0'),
-              node_id: tx.node_id ?? item.node_id ?? null,
-              gas: String(tx.gas ?? item.gas ?? '0'),
-              gas_price: String(tx.gas_price ?? item.gas_price ?? '0'),
-              input: tx.input ?? item.input ?? null,
             };
 
-            // Create record
+            // Create record (types line up with Prisma.TransactionCreateInput)
             await this.prisma.transaction.create({
               data: createData,
             });

@@ -5,6 +5,7 @@ import { GqlModule } from '@Graphql/gql.module';
 import { BlocksModule } from '@Modules/blocks/blocks.module';
 import { IndexerModule } from '@Modules/indexer/indexer.module';
 import { TransactionsModule } from '@Modules/transactions/transactions.module';
+import { WalletAuthModule } from '@Modules/wallet-auth/wallet-auth.module';
 import { PrismaModule } from '@Prisma/prisma.module';
 import { RedisModule } from '@Redis/redis.module';
 
@@ -16,6 +17,7 @@ import { RedisModule } from '@Redis/redis.module';
     IndexerModule,
     BlocksModule,
     TransactionsModule,
+    WalletAuthModule,
     RedisModule,
   ],
 })
