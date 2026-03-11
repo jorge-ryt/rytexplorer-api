@@ -15,7 +15,7 @@ async function bootstrap() {
   const server = express();
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
 
-  const port = process.env.SERVER_PORT || 3000;
+  const port = process.env.SERVER_PORT || 3001;
 
   app.use(helmet());
   app.use(compression());

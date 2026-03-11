@@ -5,9 +5,6 @@
 
 */
 -- AlterTable
-ALTER TABLE "alerts" ALTER COLUMN "id" DROP DEFAULT;
-
--- AlterTable
 ALTER TABLE "blocks" ALTER COLUMN "block_status" DROP NOT NULL;
 
 -- AlterTable
@@ -15,12 +12,6 @@ ALTER TABLE "globalStats" ALTER COLUMN "id" DROP DEFAULT;
 
 -- AlterTable
 ALTER TABLE "nodesMap" ALTER COLUMN "id" DROP DEFAULT;
-
--- AlterTable
-ALTER TABLE "replayBlocks" ALTER COLUMN "id" DROP DEFAULT;
-
--- AlterTable
-ALTER TABLE "tokenInfo" ALTER COLUMN "id" DROP DEFAULT;
 
 -- AlterTable
 ALTER TABLE "transactionHistory" ALTER COLUMN "id" DROP DEFAULT;
