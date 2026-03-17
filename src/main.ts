@@ -1,10 +1,10 @@
 import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { WsAdapter } from '@nestjs/platform-ws';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import express from 'express';
+import { WsAdapter } from '@nestjs/platform-ws';
 
 import compression from 'compression';
+import express from 'express';
 import helmet from 'helmet';
 
 import { AllExceptionsFilter } from '@Filters/all-exceptions.filter';

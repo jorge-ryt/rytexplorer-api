@@ -1,4 +1,5 @@
 import { Injectable, InternalServerErrorException } from '@nestjs/common';
+
 import jwt, { JwtPayload as JwtPayloadBase, SignOptions } from 'jsonwebtoken';
 
 export interface JwtPayload extends JwtPayloadBase {

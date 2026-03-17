@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+
 import { verifyMessage as verifyMessageUnsafe } from 'ethers';
 
 export interface VerifyResult {

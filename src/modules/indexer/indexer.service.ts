@@ -7,6 +7,7 @@ import {
 
 import WebSocket from 'ws';
 
+import { NODE_URLS } from '@Modules/indexer/indexer.constants';
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { BlockQueue } from '@Modules/indexer/queues/block.queue';
 import { MempoolQueue } from '@Modules/indexer/queues/mempool.queue';
@@ -16,7 +17,8 @@ import { RedisService } from '@Redis/redis.service';
 @Injectable()
 export class IndexerService implements OnModuleInit, OnModuleDestroy {
   private readonly logger = new Logger(IndexerService.name);
-  private sockets: WebSocket[] = [];
+  private sockets: Map<string, WebSocket> = new Map();
+  private destroyed = false;
 
   constructor(
     private readonly redisService: RedisService,
@@ -28,27 +30,27 @@ export class IndexerService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     this.logger.log('🚀 Starting IndexerService...');
-    const nodeBase = process.env.NODE_URL ?? 'localhost';
 
-    const urls = [
-      `ws://${nodeBase}:8010/ws/v2`,
-      `ws://${nodeBase}:8020/ws/v2`,
-      `ws://${nodeBase}:8030/ws/v2`,
-      `ws://${nodeBase}:8040/ws/v2`,
-      `ws://${nodeBase}:8050/ws/v2`,
-    ];
+    if (!NODE_URLS.length) {
+      this.logger.warn(
+        'No NODE_URLs configured. Set the NODE_URLs environment variable (comma-separated WebSocket URLs).',
+      );
+      return;
+    }
 
-    urls.forEach((u) => this.listenToRPCSocket(u));
+    NODE_URLS.forEach((u) => this.listenToRPCSocket(u));
   }
 
   onModuleDestroy() {
     this.logger.log('🛑 Stopping IndexerService and closing sockets...');
+    this.destroyed = true;
     this.sockets.forEach((s) => s.close());
+    this.sockets.clear();
   }
 
   private listenToRPCSocket(url: string) {
     const socket = new WebSocket(url);
-    this.sockets.push(socket);
+    this.sockets.set(url, socket);
     const redis = this.redisService.getClient();
 
     socket.on('open', () => {
@@ -101,6 +103,8 @@ export class IndexerService implements OnModuleInit, OnModuleDestroy {
     });
 
     socket.on('close', () => {
+      this.sockets.delete(url);
+      if (this.destroyed) return;
       this.logger.warn(`Socket closed: ${url}. Reconnecting in 5s...`);
       setTimeout(() => this.listenToRPCSocket(url), 5000);
     });
