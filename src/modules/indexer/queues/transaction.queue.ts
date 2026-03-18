@@ -4,7 +4,9 @@ import {
   OnModuleInit,
   OnModuleDestroy,
 } from '@nestjs/common';
+
 import type { Prisma } from '@prisma/client';
+
 import { IEpochData, ITransaction } from '@Interfaces/transactions';
 import { WsBroadcastGateway } from '@Modules/indexer/indexer.ws-broadcast.gateway';
 import { PrismaService } from '@Prisma/prisma.service';

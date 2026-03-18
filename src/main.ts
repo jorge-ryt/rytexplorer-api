@@ -28,6 +28,7 @@ async function bootstrap() {
   app.useWebSocketAdapter(new WsAdapter(app));
 
   await app.listen(port);
+
   Logger.log(`🚀 RYT Explorer API running on http://localhost:${port}/graphql`);
 }
 void bootstrap();

@@ -3,10 +3,13 @@ import {
   InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
-import type { Response } from 'express';
-import { PrismaService } from '@Prisma/prisma.service';
+
 import { ethers } from 'ethers';
 import * as jwt from 'jsonwebtoken';
+
+import { PrismaService } from '@Prisma/prisma.service';
+
+import type { Response } from 'express';
 
 export interface JwtPayload {
   address: string;
